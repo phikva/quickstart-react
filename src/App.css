@@ -1,0 +1,12 @@
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+}
+
+
+
+.board-view {
+  background-color: white;
+  height: 100%;
+  width: 100%;
+}
