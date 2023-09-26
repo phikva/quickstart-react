@@ -22,14 +22,6 @@ const BoardView = () => {
     withoutDate: false,
   });
 
-  // Disable tabs by default
-  const [isTabsDisabled, setIsTabsDisabled] = useState({
-    pastWeek: true,
-    thisWeek: true,
-    upcomingWeeks: true,
-    withoutDate: true,
-  });
-
   useEffect(() => {
     // Fetch boards
     async function fetchBoards() {
@@ -88,13 +80,26 @@ const BoardView = () => {
       const tasksResponse = await monday.api(
         `query {
           boards(ids: [${boardId}]) {
-            items {
+            name
+            owners {
+              name
+            }
+            items (limit: 10) {
               id
               name
               column_values {
                 title
                 text
                 value
+              }
+              subitems {
+                id
+                name
+                column_values {
+                  title
+                  value
+                  text
+                }
               }
             }
           }
@@ -115,23 +120,13 @@ const BoardView = () => {
 
   // Toggle tabs
   function toggleTab(tabName) {
-    if (!isTabsDisabled[tabName]) {
+    if ([tabName]) {
       setIsTabsOpen((prevState) => ({
         ...prevState,
         [tabName]: !prevState[tabName],
       }));
     }
   }
-
-  useEffect(() => {
-    // Enable or disable tabs based on the presence of tasks
-    setIsTabsDisabled({
-      pastWeek: categorizedTasks.pastWeekTasks.length === 0,
-      thisWeek: categorizedTasks.thisWeekTasks.length === 0,
-      upcomingWeeks: categorizedTasks.upcomingWeekTasks.length === 0,
-      withoutDate: categorizedTasks.withoutDateTasks.length === 0,
-    });
-  }, []);
 
   return (
     <div className="board-view">
@@ -172,7 +167,6 @@ const BoardView = () => {
           columns={tasks.length > 0 ? tasks[0].column_values : []}
           isTabOpen={isTabsOpen.pastWeek}
           toggleTab={() => toggleTab("pastWeek")}
-          disabled={isTabsDisabled.pastWeek}
         />
         <TaskTable
           title="This Week"
@@ -180,7 +174,6 @@ const BoardView = () => {
           columns={tasks.length > 0 ? tasks[0].column_values : []}
           isTabOpen={isTabsOpen.thisWeek}
           toggleTab={() => toggleTab("thisWeek")}
-          disabled={isTabsDisabled.thisWeek}
         />
         <TaskTable
           title="Upcoming Weeks"
@@ -188,7 +181,6 @@ const BoardView = () => {
           columns={tasks.length > 0 ? tasks[0].column_values : []}
           isTabOpen={isTabsOpen.upcomingWeeks}
           toggleTab={() => toggleTab("upcomingWeeks")}
-          disabled={isTabsDisabled.upcomingWeeks}
         />
         <TaskTable
           title="Without a Date"
@@ -196,7 +188,6 @@ const BoardView = () => {
           columns={tasks.length > 0 ? tasks[0].column_values : []}
           isTabOpen={isTabsOpen.withoutDate}
           toggleTab={() => toggleTab("withoutDate")}
-          disabled={isTabsDisabled.withoutDate}
         />
       </div>
     </div>

@@ -10,6 +10,9 @@ body {
   height: 100%;
   width: 100%;
 }
+.subitem {
+  background-color: gray;
+}
 .tab-header {
   display: flex;
   align-items: center;

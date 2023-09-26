@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const TaskTable = ({
   title,
@@ -8,6 +8,23 @@ const TaskTable = ({
   disabled,
   toggleTab,
 }) => {
+  const [selectedTask, setSelectedTask] = useState(null);
+
+  const handleTaskDropdown = (task) => {
+    setSelectedTask(selectedTask === task ? null : task);
+  };
+
+  const renderSubitemsHeader = () => {
+    return (
+      <tr>
+        <th>Subitem Name</th>
+        {columns.map((column) => (
+          <th key={column.title}>{column.title}</th>
+        ))}
+      </tr>
+    );
+  };
+
   return (
     <div className="tab">
       <div className="tab-header" onClick={toggleTab}>
@@ -15,6 +32,7 @@ const TaskTable = ({
           {title} ({tasks.length})<span>{isTabOpen ? "▼" : "►"}</span>
         </h3>
       </div>
+      
       {isTabOpen && (
         <table>
           <thead>
@@ -24,15 +42,40 @@ const TaskTable = ({
                 <th key={column.title}>{column.title}</th>
               ))}
             </tr>
+            
           </thead>
           <tbody>
             {tasks.map((task) => (
-              <tr key={task.id}>
-                <td>{task.name}</td>
-                {task.column_values.map((column, index) => (
-                  <td key={index}>{column.text}</td>
-                ))}
-              </tr>
+              <React.Fragment key={task.id}>
+                <tr>
+                  <td
+                    onClick={() => handleTaskDropdown(task)}
+                    style={{
+                      cursor: task.subitems?.length ? "pointer" : "default",
+                    }}
+                  >
+                    {task.name}
+                    {task.subitems?.length > 0 && (selectedTask === task ? "▲" : "▼")}
+                  </td>
+                  {columns.map((column, index) => (
+                    <td key={index}>
+                      {task.column_values.find((col) => col.title === column.title)?.text}
+                    </td>
+                  ))}
+                </tr>
+                {selectedTask === task && task.subitems?.length > 0 && renderSubitemsHeader()}
+                {selectedTask === task &&
+                  task.subitems?.map((subitem) => (
+                    <tr key={subitem.id} className="subitem">
+                      <td>{subitem.name}</td>
+                      {columns.map((column, index) => (
+                        <td key={index}>
+                          {subitem.column_values.find((col) => col.title === column.title)?.text}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
