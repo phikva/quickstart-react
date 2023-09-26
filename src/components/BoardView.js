@@ -9,6 +9,12 @@ const BoardView = () => {
   const [selectedBoardOwners, setSelectedBoardOwners] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState(null);
+  const [isTabsOpen, setIsTabsOpen] = useState({
+    pastWeek: false,
+    thisWeek: false,
+    upcomingWeeks: false,
+    withoutDate: false,
+  });
 
   useEffect(() => {
     // Fetch boards
@@ -49,8 +55,7 @@ const BoardView = () => {
     try {
       const boardResponse = await monday.api(
         `query {
-          boards(ids: ${boardId}) {
-            id
+          boards(ids: [${boardId}]) {
             owners {
               id
               name
@@ -73,13 +78,13 @@ const BoardView = () => {
     try {
       const tasksResponse = await monday.api(
         `query {
-          boards(ids: ${boardId}) {
+          boards(ids: [${boardId}]) {
             items {
               id
               name
               column_values {
-                text
                 title
+                text
                 value
               }
             }
@@ -110,6 +115,11 @@ const BoardView = () => {
     const withoutDateTasks = [];
 
     tasks.forEach((task) => {
+      const isSubtask = task.column_values.some(
+        (column) =>
+          column.title === "Subitems" && column.text === "Yes" // Adjust this based on your column value
+      );
+
       const deadlineColumn = task.column_values.find(
         (column) => column.title === "Deadline" && column.text
       );
@@ -135,6 +145,14 @@ const BoardView = () => {
       upcomingWeekTasks,
       withoutDateTasks, // Add the category for tasks without a date
     };
+  }
+
+  // Function to toggle tab open/close state
+  function toggleTab(tabName) {
+    setIsTabsOpen((prevState) => ({
+      ...prevState,
+      [tabName]: !prevState[tabName],
+    }));
   }
 
   return (
@@ -170,30 +188,122 @@ const BoardView = () => {
       </div>
       <div>
         <h2>Tasks:</h2>
-        <h3>Past Weeks:</h3>
-        <ul>
-          {categorizeTasksByDate(tasks).pastWeekTasks.map((task) => (
-            <li key={task.id}>{task.name}</li>
-          ))}
-        </ul>
-        <h3>This Week:</h3>
-        <ul>
-          {categorizeTasksByDate(tasks).thisWeekTasks.map((task) => (
-            <li key={task.id}>{task.name}</li>
-          ))}
-        </ul>
-        <h3>Upcoming Weeks:</h3>
-        <ul>
-          {categorizeTasksByDate(tasks).upcomingWeekTasks.map((task) => (
-            <li key={task.id}>{task.name}</li>
-          ))}
-        </ul>
-        <h3>Without a Date:</h3>
-        <ul>
-          {categorizeTasksByDate(tasks).withoutDateTasks.map((task) => (
-            <li key={task.id}>{task.name}</li>
-          ))}
-        </ul>
+        <div className="tab">
+          <div className="tab-header" onClick={() => toggleTab("pastWeek")}>
+            <h3>Past Week ({categorizeTasksByDate(tasks).pastWeekTasks.length})</h3>
+            <span> {isTabsOpen.pastWeek ? "▼" : "►"}</span>
+          </div>
+          {isTabsOpen.pastWeek && (
+            <table>
+              <thead>
+                <tr>
+                  <th>Task Name</th>
+                  {tasks.length > 0 &&
+                    tasks[0].column_values.map((column) => (
+                      <th key={column.title}>{column.title}</th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {categorizeTasksByDate(tasks).pastWeekTasks.map((task) => (
+                  <tr key={task.id}>
+                    <td>{task.name}</td>
+                    {task.column_values.map((column, index) => (
+                      <td key={index}>{column.text}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <div className="tab">
+          <div className="tab-header" onClick={() => toggleTab("thisWeek")}>
+            <h3>This Week ({categorizeTasksByDate(tasks).thisWeekTasks.length})</h3>
+            <span> {isTabsOpen.thisWeek ? "▼" : "►"}</span>
+          </div>
+          {isTabsOpen.thisWeek && (
+            <table>
+              <thead>
+                <tr>
+                  <th>Task Name</th>
+                  {tasks.length > 0 &&
+                    tasks[0].column_values.map((column) => (
+                      <th key={column.title}>{column.title}</th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {categorizeTasksByDate(tasks).thisWeekTasks.map((task) => (
+                  <tr key={task.id}>
+                    <td>{task.name}</td>
+                    {task.column_values.map((column, index) => (
+                      <td key={index}>{column.text}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <div className="tab">
+          <div className="tab-header" onClick={() => toggleTab("upcomingWeeks")}>
+            <h3>Upcoming Weeks ({categorizeTasksByDate(tasks).upcomingWeekTasks.length})</h3>
+            <span> {isTabsOpen.upcomingWeeks ? "▼" : "►"}</span>
+          </div>
+          {isTabsOpen.upcomingWeeks && (
+            <table>
+              <thead>
+                <tr>
+                  <th>Task Name</th>
+                  {tasks.length > 0 &&
+                    tasks[0].column_values.map((column) => (
+                      <th key={column.title}>{column.title}</th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {categorizeTasksByDate(tasks).upcomingWeekTasks.map((task) => (
+                  <tr key={task.id}>
+                    <td>{task.name}</td>
+                    {task.column_values.map((column, index) => (
+                      <td key={index}>{column.text}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <div className="tab">
+          <div className="tab-header" onClick={() => toggleTab("withoutDate")}>
+            <h3>Without a Date ({categorizeTasksByDate(tasks).withoutDateTasks.length})</h3>
+           <span>{isTabsOpen.withoutDate ? "▼" : "►"} </span> 
+          </div>
+          {isTabsOpen.withoutDate && (
+            <table>
+              <thead>
+                <tr>
+                  <th>Task Name</th>
+                  {tasks.length > 0 &&
+                    tasks[0].column_values.map((column) => (
+                      <th key={column.title}>{column.title}</th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {categorizeTasksByDate(tasks).withoutDateTasks.map((task) => (
+                  <tr key={task.id}>
+                    <td>{task.name}</td>
+                    {task.column_values.map((column, index) => (
+                      <td key={index}>{column.text}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );
