@@ -1,20 +1,18 @@
-// TaskTable.js
+import React from "react";
 
-import React, { useState } from "react";
-
-const TaskTable = ({ title, tasks, columns }) => {
-  const [isTabOpen, setIsTabOpen] = useState(false);
-
-  const toggleTab = () => {
-    setIsTabOpen(!isTabOpen);
-  };
-
+const TaskTable = ({
+  title,
+  tasks,
+  columns,
+  isTabOpen,
+  disabled,
+  toggleTab,
+}) => {
   return (
     <div className="tab">
       <div className="tab-header" onClick={toggleTab}>
         <h3>
-          {title} ({tasks.length})
-          <span>{isTabOpen ? "▼" : "►"}</span>
+          {title} ({tasks.length})<span>{isTabOpen ? "▼" : "►"}</span>
         </h3>
       </div>
       {isTabOpen && (
